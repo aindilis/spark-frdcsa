@@ -1,0 +1,5 @@
+{deffunction (queryAgent $agent $contents)
+  doc: "Query the UniLang XML-RPC server on port 10000"
+  imp: (pyFunction "++" (pyModRaw "spark.io.unilang" "queryAgent"))}
+
+exportall:

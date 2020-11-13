@@ -1,0 +1,80 @@
+body {
+	font-family: palatino, georgia, times new roman, serif;
+	color: #333;
+	line-height: 170%;
+	font-size: small;
+	background-color: #fff;
+}
+.eclipse {
+	font-family: arial, helvetica, sans-serif;
+}
+dt {
+	font-weight: bold;
+	margin-top: 10px;
+}
+blockquote.note {
+	background-color: #fff;
+	padding:10px;
+	border: 1px solid #ccc;
+}
+blockquote.file {
+	font-family: monospace, typewriter;
+	background-color: #fff;
+	padding:10px;
+	border: 1px solid #ccc;
+}
+blockquote.location {
+	font-family: monospace, typewriter;
+	background-color: #fff;
+	padding:10px;
+	border: 1px solid #ccc;
+}
+blockquote.code {
+	font-family: monospace, typewriter;
+	background-color: #fff;
+	padding:10px;
+	line-height: 110%;
+	border: 1px solid #ccc;
+}
+blockquote.command {
+	font-family: monospace, typewriter;
+	background-color: #fff;
+	padding:10px;
+	border: 1px solid #ccc;
+}
+h1,h2 {
+	border-bottom: 1px dotted #ccc;
+	padding: 0px;
+}
+h3 {
+	text-decoration: bold;
+	padding: 0px;
+}
+.toc {
+	border: 1px dotted #ccc;
+	padding-left: 10px;
+}
+.toc a, .toc a:visited, .toc a:hover {
+	font-size:x-large;
+	text-decoration: none;
+	line-height: 150%;
+}
+.entry {
+	padding: 10px;
+	background-color: #eee;
+	border: 1px dotted #ccc;
+}
+pre {
+	font-size: medium;
+}
+.author {
+	font-family: verdana, arial, helvetica, sans-serif;
+	line-height: 110%;
+	border: 1px dotted #ccc;
+	font-size: x-small;
+	padding: 5px;
+	margin-bottom: 10px;
+}
+tt {
+	font-size: medium;
+}

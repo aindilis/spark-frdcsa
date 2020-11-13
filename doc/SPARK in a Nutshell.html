@@ -1,0 +1,1236 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title> SPARK in a Nutshell</title>
+
+<link rel="stylesheet" href="SPARK%20in%20a%20Nutshell_files/styles.css" typle="text/css">
+
+</head>
+
+<body>
+
+<h1>SPARK in a Nutshell</h1>
+<h3>A Guide for Writing SPARK Packages in SPARK-L </h3>
+<p>
+by Alyssa Glass<br><br>
+<i>v0.2 / 19 September 2005 / compatible with SPARK v0.8</i><br>
+<i>v0.1 / 25 August 2004 for SPARK v0.4</i>
+</p>
+
+<h2>0.  Contents</h2>
+
+1.  <a href="#introduction">Introduction</a><br>
+2.  <a href="#installation">Installation and Set-Up</a><br>
+3.  <a href="#packages">SPARK Packages</a><br>
+4.  <a href="#declarations">Declarations</a><br>
+5.  <a href="#beliefkb">Symbols and the Belief Knowledge Base</a><br>
+6.  <a href="#procedures">Writing Basic Procedures</a><br>
+7.  <a href="#util">SPARK Utility Packages</a><br>
+8.  <a href="#closures">Closures</a><br>
+9.  <a href="#adv_procedures">Advanced Procedure Definitions</a><br>
+10.  <a href="#meta">The SPARK Meta-Level</a><br>
+11.  <a href="#python">Providing Python Implementations</a><br>
+12.  <a href="#script">SPARK Scripting</a><br>
+A.  <a href="#index">Index</a><br>
+
+<h2><a name="introduction"></a>
+1.  Introduction</h2>
+<div class="entry">
+<p>
+This document is for beginning SPARK-L writers, to assist with the 
+creation of new packages.  When first getting started writing SPARK 
+packages, many new users find that the complete technical specification 
+is too detailed in the language and does not give enough of a high-level
+ view of how to approach SPARK packages.  That is where this guide 
+becomes helpful.  It is recommended that new SPARK package writers start
+ with this guide.
+</p>
+<p>
+Note, however, that this guide is not meant to be exhaustive of the 
+SPARK-L language.  For a complete technical specification of the SPARK-L
+ language, please see <a href="http://www.ai.sri.com/~spark/doc/SPARK-ref-man.pdf">The SPARK Reference Manual</a>, which is included in the <tt>/doc</tt>
+ directory of the SPARK release.  We recommend that once you are 
+comfortable with the language as described in this guide, you then turn 
+to <a href="http://www.ai.sri.com/~spark/doc/SPARK-ref-man.pdf">The SPARK Reference Manual</a> as a full language reference.
+</p>
+<p>
+If you just want to be able to <b>run</b> existing packages, please see the <a href="http://www.ai.sri.com/~spark/doc/install.html">install guide</a> and the <a href="http://www.ai.sri.com/~spark/doc/tutorial.html">interpreter tutorial</a>, both of which are included in the <tt>/doc</tt> directory of the SPARK release.
+</p>
+</div>
+
+<h2><a name="installation"></a>
+2.  Installation and Set-Up</h2>
+<div class="entry">
+<p>
+For help with installing SPARK on your machine, please see the <a href="http://www.ai.sri.com/~spark/doc/install.html">install guide</a> included with the release documentation.  That document will guide you through a full installation of SPARK.
+</p>
+<p>
+When you have finished installing SPARK, we also recommend that you work through the <a href="http://www.ai.sri.com/~spark/doc/tutorial.html">interpreter tutorial</a>,
+ which will walk you through using the SPARK interpreter, and will help 
+you to become comfortable with loading pre-existing packages and 
+interacting with a SPARK agent in the interpreter.
+</p>
+<p>
+For the rest of this guide, we will assume that you have SPARK correctly
+ installed with a working SPARK interpreter, and that you know how to 
+run the interpreter to test SPARK packages.  We also assume that you 
+have an editing environment with which you are comfortable.  For editing
+ SPARK-L files, we recommend using the integrated SPARK Eclipse 
+environment; see the <a href="http://www.ai.sri.com/~spark/eclipse/doc/index.html">SPARK Plugin for Eclipse documentation</a> for help with installing and using SPARK Eclipse.  Your SPARK release also contains an Emacs SPARK mode; see the <a href="http://www.ai.sri.com/~spark/doc/resources.html#sparkmode">spark-mode in Emacs</a> section of the <a href="http://www.ai.sri.com/~spark/doc/resources.html">Developers Resources Guide</a> for advice on editing SPARK files in Emacs.
+</p>
+</div>
+
+<h2><a name="packages"></a>
+3.  SPARK Packages</h2>
+<div class="entry">
+<p>
+Packages are the organizing structure of all SPARK files.  A single 
+package can be made up of one or more SPARK files.  All of the files 
+that make up a package share a common namespace, as described below.  
+The set of files that make up a package is often declared when the 
+package is loaded, but it does not have to be; packages can be expanded 
+at runtime as needed.
+</p>
+<p>
+SPARK files are written in the SPARK language, SPARK-L, and end in a <tt>".spark"</tt> extension.  These <tt>.spark</tt> files may contain any or all of the following constructs:
+</p>
+<p>
+ a. <a href="#pack">package statement</a><br>
+ b. <a href="#declarations2">declarations</a><br>
+ c. <a href="#definitions">definitions</a><br>
+ d. <a href="#facts">additional facts/beliefs for the knowledge base</a><br>
+ e. <a href="#import">import statements</a><br>
+ f. <a href="#export">export statements</a><br>
+ g. <a href="#requires">requires statements</a><br>
+ h. <a href="#comments">programmer comments</a><br>
+</p>
+<p>
+We will go through each of these constructs in turn.
+</p>
+
+
+<h3><a name="pack"></a>
+a. package statement</h3>
+<p>
+The first line of most <tt>.spark</tt> files is a package statement, which indicates which package this file is to be a part of.  To make this file part of the <tt>sri.foo</tt> package:
+</p>
+
+<blockquote class="code"><pre>package: sri.foo
+</pre></blockquote>
+
+<p>
+If no package statement is included in the file, the package is assumed to be the same as the filename.  Thus, if the file <tt>mySparklCode.spark</tt> does not contain a package statement, it is automatically in the <tt>mySparklCode</tt> package.  It is considered good practice to <b>always</b> place a package statement at the top of SPARK-L files.
+</p>
+<p>
+One note about organizing multi-file packages.  It is good practice in 
+SPARK to place files in a common directory with other files in the same 
+package.  These packages are generally named by their path from a root 
+path defined upon starting the interpreter.  Thus, if <tt>C:/SPARKROOT/src/</tt> is on the interpreter's path at startup, then the package <tt>"spark.lang.list"</tt> would often be made up of the files in the <tt>C:/SPARKROOT/src/spark/lang/list/</tt> directory, and the associated files would each have a <tt>"package: spark.lang.list"</tt> statement.
+</p>
+<p>
+One additional note, concerning backwards compatibility.  In previous 
+versions of SPARK, files were organized into modules.  As of release 0.8
+ of SPARK, module statements (<tt>"module: sri.foo"</tt>) are considered equivalent to package statements; however, this use is deprecated.
+</p>
+
+
+<h3><a name="declarations2"></a>
+b. declarations</h3>
+
+<p>
+SPARK deals with objects such as predicates, actions, functions, and 
+constants. In SPARK-L these objects are named by identifiers, such as <tt>foo</tt>.
+ To be able to reference an object using an identifier, there must be a 
+declaration of the object. The declaration states that there exists a 
+named object and states how that object is used (for instance, <tt>foo</tt>
+ is an action, it takes three arguments, etc.). The identifier is a 
+unique name within a package, but different packages may use the same 
+identifier to refer to different objects. To distinuish between the 
+object with identifier <tt>foo</tt> declared in package <tt>a.b</tt> from that declared in package <tt>c.d</tt>, each named object has a fully qualified name that is a distinct symbol, in this case <tt>a.b.foo</tt> and <tt>c.d.foo</tt>.
+  These declarations are immutable; they cannot be changed once 
+execution has begun.  Details on the syntax of the various types of 
+declarations are in a later section.
+</p>
+
+<h3><a name="definitions"></a>
+c. definitions</h3>
+
+<p>
+Once a predicate, action, or function has been declared, it will also 
+need to be defined.  While the declaration provides basic information 
+about its use, the definition provides the actual implementation.  For 
+example, for the function <tt>"+"</tt> (addition), the declaration might establish the identifier <tt>"+"</tt>
+ as the name of the function, and indicate that the function takes 2 
+parameters and returns a value.  The definition would actually define 
+what it means to add two numbers.  Details on the syntax of definitions 
+are in a later section.
+</p>
+
+<a name="facts"></a>
+<h3>d. additional facts/beliefs for the knowledge base</h3>
+
+<p>
+In addition to declarations and definitions, you may want to initialize 
+your SPARK agent with initial beliefs about the world.  A package can 
+thus contain statements of fact that will be inserted into the agent's 
+knowledge base when that package is loaded.  Additional information 
+about SPARK's knowledge base of agent beliefs can be found in a later 
+section.
+</p>
+
+
+<h3><a name="import"></a>
+e. import statements</h3>
+<p>
+To use SPARK constructs defined in a package other than the one you are 
+currently working in, you need to import those constructs into the 
+current package.  The best and cleanest way is to import just the 
+symbols that you will need to use.  For instance, the <tt>spark.lang.list</tt>
+ package, which provides many list manipulation functions, includes a 
+predicate for checking whether an object is an element of a list.  To 
+import just the <tt>"Member"</tt> symbol from <tt>spark.lang.list</tt>:
+</p>
+
+<blockquote class="code"><pre>importfrom: spark.lang.list Member
+</pre></blockquote>
+
+<p>
+This makes any occurrence of the identifier <tt>Member</tt> in this file (or in any other file in the same package) refer to the declaration from package <tt>spark.lang.list</tt>
+</p>
+
+<p>
+Alternatively, if you would like access to all symbols which have been exported from a given package, you can use the <tt>"importall:"</tt> command, without specifying any symbols:
+</p>
+
+<blockquote class="code"><pre>importall:  spark.lang.list
+</pre></blockquote>
+
+<p>
+The order of import statements in a <tt>.spark</tt> file does not have any impact on the behavior of the package.
+</p>
+<p>
+Since all files in a package share a common namespace, once this symbol 
+has been imported by a single file, it will be visible to all files that
+ make up that package.  More information on the link between identifiers
+ and the symbols they represent can be found in a later section.
+</p>
+
+<h3><a name="export"></a>
+f. export statements</h3>
+
+<p>
+By default, any symbols declared or defined in a <tt>.spark</tt> file 
+are only known within that file's package.  If you would like to be able
+ to use a symbol in a different package, through an import statement in 
+that package, you need to export the symbol.  For example, if you are 
+creating package <tt>foo.bar</tt>, and you want to export the symbol <tt>"my_sym"</tt> you would type:
+</p>
+
+<blockquote class="code"><pre>export: my_sym
+</pre></blockquote>
+
+<p>
+The symbol <tt>my_sym</tt> would then be accessible in another package which includes either ONE of these commands:
+</p>
+
+<blockquote class="code"><pre>importfrom:  foo.bar my_sym
+importall:  foo.bar
+</pre></blockquote>
+
+<p>
+<i>[FOR ADVANCED USERS:  There is also a command <tt>exportall:</tt> which can be used to export all symbols declared in a given file.  A warning:  <tt>exportall</tt>
+ can be tricky to use, because you often end up exporting more symbols 
+than you intend, and not exporting functionality which you intended to 
+export, which can cause strange behavior when you then use <tt>importall</tt> to import everything from the package.  <b>Use with caution.</b>  In general, <tt>exportall</tt> is <b>NOT</b> recommended in most situations.]</i>
+</p>
+
+<h3><a name="requires"></a>
+g. requires statements</h3>
+
+<p>
+Anything declared in or imported into a file F in package P is 
+potentially visible to to any other file in package P. However, SPARK 
+cannot let you use an identifier unless it knows where to find the 
+declaration. The files containing the declarations you need could be 
+located anywhere in the file system, and SPARK needs to be told where to
+ find them. The <tt>requires:</tt> statement tells SPARK to load a file that contains declarations that you need.</p>
+
+<p>
+Usually, for each package P there is a set of files containing core 
+declarations.  (Other files may add extra identifier declarations to the
+ package, but the files containing the core declarations are always 
+required.)  For each package P there should be a file P.spark that 
+either contains the core declarations itself, or includes <tt>requires:</tt>
+ statements listing the files that contain the core declarations. 
+Importing declarations from a package P automatically "requires" the 
+P.spark file (as does a <tt>package: P</tt> statement). Thus, the main use for the <tt>requires:</tt> statement is in the P.spark file to state the core files of a package.  (The <tt>requires:</tt> statement can also be used to tell SPARK where to find additional declarations that are not core declarations for a package.)
+</p>
+
+<p>
+To access the facts (including definitions) contained in a given file, 
+that file must be required by one of the packages loaded into the agent.
+  To load the facts in the file <tt>foo.bar.spark</tt>:
+</p>
+
+<blockquote class="code"><pre>requires: foo.bar
+</pre></blockquote>
+
+<p>
+The distinction between "imports" and "requires" can be confusing to new
+ SPARK users.  A few points to help understand this distinction:
+</p><ul>
+  <li>Declarations of identifiers are <b>imported</b> from packages into packages.  Files <b>require</b> other files.
+  </li><li>When declarations are  <b>imported</b> from a package P, the file P.spark is automatically <b>required</b>
+ (along with any files P.spark requires, and so on).  The reverse is not
+ true; requiring a file does not cause anything to be imported.
+  </li><li>When a package is <b>imported</b> from, the relevant declarations in that package are added into the importing package.  When a file is <b>required</b>,
+ it does not directly affect the file's package - the declarations in 
+the file are only visible if the file is in the same package or the 
+declarations are imported separately.
+  </li><li>When it comes time to load the definitions and other facts 
+from a file into the agent's knowledge base, SPARK ensures that any 
+required file is also loaded.
+</li></ul>
+<p></p>
+<p>
+When deciding whether to use <tt>import</tt> or <tt>requires</tt>, the important consideration is whether you need access to new <b>symbols</b>, or just new <b>facts</b>
+ about existing symbols already in your namespace.  In most cases other 
+than a file establishing core package files, you will want to use <tt>import</tt>.
+  If you need to add new symbols to your package's namespace (for 
+example, if you want to write a new procedure definition for an action 
+declared in a different package, or if you want to assert a fact using a
+ predicate declared in a different package) then you will need to use <tt>import</tt> to bring those symbols into your namespace.
+</p>
+
+<a name="comments"></a>
+<h3>h. programmer comments</h3>
+
+<p>
+Finally, you may add comments to <tt>.spark</tt> files to aid in readability and to ease maintaining your SPARK packages.  In SPARK-L, programmer comments are indicated with a <tt>"#"</tt> and continue to the end of the line:
+</p>
+
+<blockquote class="code"><pre># everything on this line is a comment.
+</pre></blockquote>
+</div>
+
+
+
+<h2><a name="declarations"></a>
+4.  Declarations</h2>
+<div class="entry">
+<p>
+Four types of identifiers must be declared in SPARK:  actions, 
+predicates, functions and constants.  Failure to provide declarations 
+will result in a warning when you try to load the package.  In their 
+most basic form, all four types of declarations have the same format.
+</p>
+<p>
+Before we go into the syntax of declarations, a few overall syntax notes:
+</p>
+
+<ul>
+<li>variables in SPARK are indicated using dollar signs (<tt>$</tt>).  For example, <tt>$foo</tt> is a variable.</li>
+<p>
+</p><li>strings are indicated with double quotes:  <tt>"this is a string"</tt></li>
+<p>
+</p><li>lists are indicated by square brackets <tt>[]</tt> with items separated by spaces.  For example:<br>
+<tt> [item1 item2 item3]</tt></li>
+</ul>
+
+<h3><a name="actions"></a>a.  actions</h3>
+
+<p>
+Use actions when you want your agent to "do" something.  As their name 
+suggests, actions are objects representing tasks that an agent can do.  
+Later on, when we look at definitions, we will discuss how to write 
+procedures which implement these actions.  For now, you can think of 
+action declarations as a catalogue of the actions that a SPARK agent 
+knows how to do.
+</p>
+<p>
+The general form of an action declaration:
+</p>
+
+<blockquote class="code"><pre>{defaction (myAction $var1 $var2)
+   doc: "myAction takes two variables and performs some sort of action"}
+</pre></blockquote>
+
+<p>
+Action declarations are contained in curly braces <tt>{}</tt>.  They always start with the keyword <tt>defaction</tt>,
+ followed by a parenthesized indication of the action's identifier and 
+its arity.  In the above example, the declared action is indicated by 
+the identifier <tt>myAction</tt> and takes two variables.
+</p>
+To indicate that variables passed into an action must be evaluable (that
+ is, must be passed in with a bound input value), place a <tt>"+"</tt> sign in front of the variable.  For example:
+<p></p>
+
+<blockquote class="code"><pre>{defaction (mySecondAction +$var1 +$var2 $var3)
+   doc: "mySecondAction takes three variables; the first two are inputs"}
+</pre></blockquote>
+
+<p>
+When mySecondAction is called, the first two inputs must be evaluable.  Note that variables without a <tt>+</tt> sign can still be evaluable, even though they are not required to be.  Marking input values with a <tt>+</tt>,
+ however, provides for more readable code and better automatic error 
+checking, and is encouraged for all action declarations with parameters 
+that are known to be input values.
+</p>
+<p>
+By default, all declarations that appear in a file are automatically 
+shared (added to the namespace) of the entire package.  To create a 
+declaration that is only visible in the current file, use a <tt>"_"</tt> to start its identifier.  For example:
+</p>
+
+<blockquote class="code"><pre>{defaction (_myPrivateAction +$var1 $var2)
+   doc: "_myPrivateAction is local to this file"}
+</pre></blockquote>
+
+<p>
+Action declarations also take a variety of optional keywords.  Advanced users can look in the more detailed <a href="http://www.ai.sri.com/~spark/doc/SPARK-ref-man.pdf">The SPARK Reference Manual</a> to see some of these keywords.  For now, we will just mention the <tt>doc</tt>
+ keyword, which allows you to provide documentation for the use of this 
+action.  The automated SPARKDOC utility included with the release can be
+ used to take the string following the <tt>doc</tt> keyword and create automated documentation web pages for your packages.
+</p>
+
+<h3><a name="predicates"></a>b.  predicates</h3>
+
+<p>
+Predicates are used to test a SPARK agent's beliefs.  They can either be
+ defined programmatically or can be implicitly defined through the 
+assertion of beliefs into the agent's knowledge base.  Predicate 
+declarations are completely analagous to action declarations.  For 
+example:
+</p>
+
+<blockquote class="code"><pre>{defpredicate (MyPred $var1 $var2)
+   doc: "tests whether $var1 and $var2 are related with the MyPred relation"}
+</pre></blockquote>
+
+<p>
+Like action declarations, predicate declarations are contained in curly braces <tt>{}</tt>.  They begin with the keyword <tt>defpredicate</tt>,
+ followed by a parenthesized indication of the predicate's symbol and 
+its arity.  Parameters in predicate declarations should be annotated 
+with the <tt>+</tt> input symbol when possible, as with action 
+declarations.  A predicate can also be made local to the file by 
+prefacing the predicate identifier with a <tt>_</tt>.
+</p>
+<p>
+It is customary practice in SPARK-L to always use capital letters to 
+begin the name of a predicate, to help to visually distinguish them from
+ actions and functions when reading a package.  They also have optional 
+keywords which may be used to expand the predicate's signature.  As with
+ actions, we recommend always including the <tt>doc</tt> keyword to ease the creation of automated documentation.
+</p>
+<p>
+The above declaration will allow statements with the predicate <code>MyPred</code>
+ to be inserted into an agent's knowledge base, thereby implicitly 
+defining it.  If you would prefer to define it programmatically, you can
+ use the <tt>"imp"</tt> keyword, described later in this guide.
+</p>
+
+<h3><a name="functions"></a>c. functions</h3>
+
+<p>
+Functions in SPARK are declared using the <tt>deffunction</tt> keyword, and are otherwise analagous to the above examples:
+</p>
+
+<blockquote class="code"><pre>{deffunction (myFun $var1 $var2)
+   doc: "applies myFun to $var1 and $var2 and returns the result"}
+</pre></blockquote>
+
+<p>
+As above with predicates and actions, function declarations have 
+additional optional keywords which may be used to expand a function's 
+signature.  In particular, the <tt>"imp"</tt> keyword is generally used to define functions within a <tt>.spark</tt> file.  The use of the <tt>"imp"</tt> keyword is described later in this guide.
+</p>
+
+<h3><a name="constants"></a>d.  constants</h3>
+
+<p>
+Declarations for constants are more simple than the declarations above.  Constants are declared with the <tt>defconstant</tt> keyword, and simply take the name of the identifier as an argument:
+</p>
+
+<blockquote class="code"><pre>{defconstant person23}
+</pre></blockquote>
+</div>
+
+<h2><a name="beliefkb"></a>
+5.  Symbols and the Belief Knowledge Base</h2>
+<div class="entry">
+<p>
+Every SPARK agent maintains a single knowledge base containing its 
+beliefs about the world.  For now, this knowledge base only contains 
+current beliefs; it does not maintain a history of past beliefs.
+</p>
+<p>
+An agent's knowledge base of beliefs includes many kinds of facts.  Some
+ beliefs are loaded automatically by the SPARK engine for every agent, 
+such as beliefs about built-in procedures, predicates and functions.  
+Some are added (or deleted) as the agent performs procedures.  Others 
+are directly added by loading new packages.  If we load a package with 
+the three declaration examples from above, we will be adding beliefs 
+about <tt>myAction</tt>, <code>MyPred</code>, and <tt>myFun</tt> to the agent's knowledge base.
+</p>
+<p>
+We can also add specific predicate beliefs to initialize an agent upon start-up.  For instance, the above declaration for <tt>MyPred</tt> does not include an implementation for how to test <tt>MyPred</tt>.  If we want to define <tt>MyPred</tt> implicitly by inserting facts, we can include these initial facts directly into our <tt>.spark</tt> file.  For example, the following means that <tt>MyPred</tt> is true if its two parameters are (1 and 2), (12 and 7), or (16 and 7):
+</p>
+
+<blockquote class="code"><pre>(MyPred 1 2)
+(MyPred 12 7)
+(MyPred 16 7)
+</pre></blockquote>
+
+<p>
+For any predicate which we have either declared or imported from another package, we can declare initial beliefs in this way.
+</p>
+<p>
+To record facts in the knowledge base that link to a single symbol, create the symbol using the <tt>defconstant</tt> declaration above.  To create symbols on the fly, we can backquote an identifier:
+</p>
+<blockquote class="code"><pre>`myID
+</pre></blockquote>
+<p>
+Note that backquoting does <b>not</b> create the same symbol as <tt>defconstant</tt>, even when given the same identifier as input.  For example, consider these two lines of SPARK-L code:
+</p>
+<blockquote class="code"><pre>{defconstant: person14}
+`person14
+</pre></blockquote>
+
+<p>
+The first of these lines declares the constant <tt>person14</tt> in the package in which the declaration appears and the identifier <tt>person14</tt> becomes part of the current package's namespace.  This constant evaluates to the symbol <tt>[package].person14</tt>.  The second line creates a symbol on the fly, outside of any package.  Its full name is simply <tt>person14</tt> and its identifier is not part of any package's namespace.
+</p>
+<p>
+If a constant already exists in your current namespace, either through a
+ declaration in your current package or through an import, you can refer
+ to that constant directly.  For example, suppose we want to store 
+several facts about specific people.  We create a constant for each 
+person, then link all of the facts about that person off of the symbol 
+value of that constant:
+</p>
+
+<blockquote class="code"><pre>{defconstant: person23}
+(HasName person23 "Bill Jones")
+(HasPhoneNumber person23 "650-555-1234")
+(HasEmailAddress person23 "bill@starbob.com")
+</pre></blockquote>
+
+<p>
+Backquoting creates symbols on the fly by not evaluating the name that 
+follows it.  In this way, we can use backquote to prevent the evaluation
+ of functions or predicates as well.  For example:
+</p>
+<blockquote class="code"><pre>`(store 1 2 3)
+</pre></blockquote>
+<p>
+evaluates simply to <tt>(store 1 2 3)</tt> regardless of whether the identifier <tt>store</tt> is in the current namespace.  To force the evaluation of individual terms within a backquote, use a <tt>,</tt> (comma).  For example:
+</p>
+<blockquote class="code"><pre>`(store 1 ,(+ 7 8) 3)
+</pre></blockquote>
+<p>
+evaluates to <tt>(store 1 15 3)</tt>.
+</p>
+<p>
+To create a symbol from a string representation,  you can use the <tt>@</tt> functor:
+</p>
+<blockquote class="code"><pre>(@ "person14")
+</pre></blockquote>
+<p>
+Note that the symbols created by <tt>(@ "person14")</tt> and the simpler <tt>`person14</tt>
+ are equivalent.  The former method is included for instances where 
+symbols need to be created on the fly from unknown string input.  
+Similarly, the functor <tt>@@</tt> can create functions on the fly:
+</p>
+<blockquote class="code"><pre>(@@ "store" 1 2 3)
+</pre></blockquote>
+<p>
+The above evaluation is equivalent to <tt>`(store 1 2 3)</tt> described above, and is used analagously to <tt>@</tt> for creating on-the-fly functors from strings.
+</p>
+
+<p>
+After the initialization of a SPARK agent, the knowledge base can be 
+updated in two ways.  One way is to add or remove beliefs directly, as 
+through the SPARK interpreter.  The other way is through the effects of 
+procedures, described below.
+</p>
+</div>
+
+<h2><a name="procedures"></a>
+6.  Writing Basic Procedures</h2>
+<div class="entry">
+<p>
+At this point, the main outline of your package is in place:  you have organized your work into logical <tt>.spark</tt>
+ files; you have declared any actions, predicates, and functions that 
+you want to create; you have decided which of them you want to export to
+ other packages; and you have initialized your agent with any initial 
+beliefs that you want loaded at startup.  In most cases, the majority of
+ what you have declared are actions and implicitly-defined predicates.  
+The main content of your package, then, still remains:  writing 
+definitions for your actions.  This is done through the writing of 
+procedure definitions, in which you use various preconditions and task 
+expressions to provide mechanisms for performing your actions.
+</p>
+<p>
+The basic parts of a procedure definition are:
+</p>
+<p>
+a.  <a href="#name">name</a><br>
+b.  <a href="#cue">cue</a><br>
+c.  <a href="#precondition">precondition</a><br>
+d.  <a href="#body">body</a><br>
+</p>
+<p>
+Here is an example of a simple procedure definition:
+</p>
+
+<blockquote class="code"><pre>{defprocedure paintHouse_havePaint
+   cue: [do: (paintHouse $color)]
+   precondition: (HavePaint $color)
+   body: [seq: [do: (placeDropCloths)]
+      [do: (applyPaintCoat $color)]
+      [do: (cleanUp)]]
+}
+</pre></blockquote>
+
+<p>
+We will go through the basics of each of these parts in turn.  But first, some notes on binding variables and finding solutions.
+</p>
+<p>
+As mentioned above, variables in SPARK are indicated with a dollar sign (<tt>$</tt>) at the beginning of their names.  These variables are <b>not</b>
+ rebindable; once they have been bound to a value through their use in 
+an action, predicate, or function, they may not be bound again (unless 
+the task that bound the variable fails or the variable is local to an 
+iteration).
+</p>
+<p><a name="ground"></a>
+As you write procedure definitions, you will need to pay close attention
+ to which variables are bound, when they are bound, and what they are 
+bound to.  When you load a package into SPARK, the SPARK engine will 
+warn you if you are using a variable as if it were bound even though it 
+may not be.
+</p>
+
+<p>
+In the interpreter tutorial, you learned that when you evaluate a 
+logical expression, all free variables are bound to the first valid 
+solution that the SPARK engine is able to find.  Keep this in mind as 
+you write procedure definitions:  at each step of the procedure, free 
+variables will be bound to the first valid solution found, and the 
+variables will remain bound to those values for the remainder of the 
+procedure.  In the <tt>paintHouse_havePaint</tt> example above, the variable <tt>$color</tt>
+ will be bound upon testing of the precondition, if it was not already 
+bound when the procedure was called, and that value will be used during 
+the execution of the tasks that follow it.
+</p>
+
+<h3><a name="name"></a>
+a.  procedure name</h3>
+<p>
+Procedure definitions, like declarations, are enclosed in curly braces <tt>{}</tt> and begin with the keyword <tt>defprocedure</tt>.  They are named with an identifier or string, which should be unique across the package.
+</p>
+
+<h3><a name="cue"></a>
+b.  cue</h3>
+<p>
+A procedure is <b>relevant</b> when its cue event occurs.  There are 3 types of cue events in SPARK:
+</p>
+
+<h4><a name="docue"></a>1. direct request for action (a <tt>do</tt> cue event)</h4>
+<p>
+The above <tt>paintHouse_havePaint</tt> example is an example of a procedure with a <tt>do</tt> cue event.  Cues of this type always have the form <tt>[do: (action_identifier variable*)]</tt> as above.  In most situations, these cues are the most common procedure cue events.
+</p>
+
+<h4><a name="newfactcue"></a>2. a new fact has become true (a <tt>newfact</tt> cue event)</h4>
+<p>
+Procedures can also be triggered when a particular fact is added to the 
+agent's belief knowledge base.  Cues of this type have the form <tt>[newfact: (predicate_identifier variable*)]</tt>.
+  For example, if there is a procedure that should be performed every 
+time the predicate (Happy $person) is added to the knowledge base, the 
+cue would be:
+</p>
+
+<blockquote class="code"><pre>[newfact: (Happy $person)]
+</pre></blockquote>
+
+<p>
+</p><h4><a name="achievecue"></a>3. a predicate is false and needs to be achieved (an <tt>achieve</tt> cue event)</h4>
+<p>
+The least common type of cue event is triggered when a procedure needs 
+to be triggered in order to achieve a currently false predicate.  Cues 
+of this type have the form <tt>[achieve: (predicate_identifier variable*)]</tt>
+ and are generally used for procedures for which (predicate_identifier 
+variable*) is added to the knowledge base as a result of the actions in 
+that procedure.  For example, if there is a procedure that concludes 
+with the fact (Happy $person) becoming true, it would have the cue:
+</p>
+
+<blockquote class="code"><pre>[achieve: (Happy $person)]
+</pre></blockquote>
+
+<p>
+Note that <tt>do</tt> cue events must refer to actions which have been declared or imported in the current package.  Similarly, <tt>newfact</tt> and <tt>achieve</tt> cue events must refer to predicates which have been declared or imported in the current package.
+</p>
+
+<p>
+All of the above cue types can have any number of parameters associated 
+with them.  As with declarations described above, the parameters to a 
+procedure cue can be annotated to indicate the mode in which the 
+procedure is expected to be called.  For instance, the above <tt>paintHouse_havePaint</tt> procedure can be called with the parameter <tt>$color</tt> either bound or unbound.  If we want to guarantee that the procedure is always called with <tt>$color</tt> already bound, we could mark it as an input parameter by annotating it with a <tt>+</tt> prefix:
+</p>
+<blockquote class="code"><pre>[do: (paintHouse +$color)]
+</pre></blockquote>
+<p>
+Input parameters are not restricted to being variables. In fact, any 
+term expression can be supplied as an input parameter and it will be 
+matched against the supplied input value. For instance, if we want our <tt>paintHouse</tt> procedure to only handle blue houses, we could change the cue to:
+</p>
+<blockquote class="code"><pre>[do: (paintHouse +"blue")]
+</pre></blockquote>
+<p>
+This procedure would then only be triggered if the action was called with the parameter "blue".
+</p>
+<p>
+Suppose we have declared an action named <tt>processList</tt> with one 
+parameter. If we want to write a special procedure definition for this 
+action that only handles two-element lists, we could use the following 
+cue:
+</p>
+<blockquote class="code"><pre>[do: (processList +[$x $y])]
+</pre></blockquote>
+<p>
+The procedure with the above cue would then only be triggered when 
+called with two-element lists, and we would have immediate access to the
+ two elements, which would bind <tt>$x</tt> and <tt>$y</tt>.
+</p>
+<p>
+Older versions of SPARK did not have parameter annotations. Instead it was necessary to use the <tt>Ground</tt> predicate to test whether a parameter was bound, or to assert that a parameter was always an input value.  This use of the <tt>Ground</tt>
+ predicate is still allowed, but is not encouraged in most situations.  
+Instead, using annotations to clearly mark parameters results in much 
+more efficient execution and helps the reader understand the intention 
+of the procedure.
+</p>
+<p>
+A parameter can be marked as an output parameter by annotating it with a <tt>-</tt>
+ prefix. This indicates that rather than the caller supplying a value 
+that will be used within the procedure, the parameter value is to be 
+constructed by the procedure and returned to the caller. As with input 
+parameters, an output parameter is not restricted to just being a 
+variable. Any expression that can be evaluated when the procedure ends 
+can be used as an output parameter.  For example, consider this cue:
+</p>
+<blockquote class="code"><pre>[do: (paintHouse -"blue")]
+</pre></blockquote>
+<p>
+A procedure with the above cue always be triggered by a paintHouse 
+action, without regard to the actual parameter supplied by the caller.  
+After successful execution of the body of the procedure, the parameter 
+supplied by the caller will be matched to "blue".  If it does not match,
+ the procedure will fail.
+</p>
+
+<h3><a name="precondition"></a>
+c.  precondition</h3>
+
+<p>
+A procedure is <b>applicable</b> when its precondition logical expression is true.  Note that being <b>relevant</b> and being <b>applicable</b> are different concepts:  a relevant (cue event has occured) procedure is only <b>applicable</b> if its precondition is also true.
+</p>
+
+<p>
+Preconditions help to determine which procedure to use in a situation.  
+For example, a single action declaration might have many different 
+procedures that trigger off of it.  Preconditions allow you to specify 
+which procedure to use in different situations.
+</p>
+<p>
+A precondition can be any <b>logical expression</b>.  A logical expression could be any of the following:
+</p>
+
+<ul>
+<li>any previously declared predicate</li>
+<br>
+<li><tt>(True)</tt> or <tt>(False)</tt><br>
+  ground predicates that are always true/false</li>
+<br>
+<li>logically connected logical expressions<br>
+  SPARK-L supports <tt>and</tt>, <tt>or</tt>, and <tt>not</tt> as logical connectives.  Examples:
+  <blockquote class="code"><pre>  (and (&gt; 4 $x) (!= $x 2))
+  (or (AtHome $person) (AtWork $person) (AtSchool $person))
+  (not (= $x 5))
+  </pre></blockquote>
+  </li>
+
+<li>existential quantifier<br>
+  using the keyword <tt>exists</tt> and a list of variables.  For example:
+  <blockquote class="code"><pre>  (exists [$person] (AtHome $person))
+  </pre></blockquote>
+  </li>
+<li>applied predicate closures<br>
+  closures will be discussed in a later section.  For now, just be aware
+ that applying a predicate closure to arguments will also create a 
+logical expression.</li>
+</ul>
+
+<p>
+Procedures that should be considered applicable in any relevant situation would have <tt>precondition: (True)</tt>.  For simplicity, these <tt>(True)</tt> preconditions may be optionally left out of the procedure definition.
+</p>
+
+<p>
+In situations where there is more than one applicable procedure for a 
+given cue, the SPARK meta-level determines which procedure to use.  A 
+discussion of the meta-level occurs in a later section of this guide.
+</p>
+<p>
+Remember that each statement with free (non-local) variables in a 
+procedure will bind those variables upon completion.  Thus, for any 
+applicable procedure that is chosen to be executed, the variables that 
+are bound in the precondition will be used in the body as well.
+</p>
+
+<h3><a name="body"></a>
+d.  body</h3>
+
+<p>
+The body of a procedure definition contains a <b>task expression</b> 
+indicating what should be done to execute the procedure.  We will list 
+the most common ways to build up a task expression, with simple examples
+ illustrating each one. In the following, <b>term</b> refers to a term expression, <b>var</b> refers to a variable, <b>log</b> referes to a logical expression, <b>task</b> refers to a task expression, and <b>log-task</b> refers to a logical expression followed by a task expression.
+</p>
+
+<dl>
+
+<dt><a name="do"></a><tt>[do: (action_identifier term*)]</tt></dt>
+<dd>
+  perform the named task<br>
+  Example:
+  <blockquote class="code"><pre>[do: (applyPaint wall red)]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="achieve"></a><tt>[achieve: (predicate_identifier term*)]</tt></dt>
+<dd>
+  attempt to make the given predicate true, if it isn't already<br>
+  Example:
+  <blockquote class="code"><pre>[achieve: (ColorOf wall red)]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="succeed"></a><tt>[succeed:]</tt> or <tt>[]</tt></dt>
+<dd>
+  do nothing:
+  <blockquote class="code"><pre>[succeed:]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="fail"></a><tt>[fail: term]</tt></dt>
+<dd>
+  immediately fail, specifying some value as a reason<br>
+  Example:
+  <blockquote class="code"><pre>[fail:  outOfPaintError]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="context"></a><tt>[context: log term*]</tt></dt>
+<dd>
+  a <tt>context</tt> task expression does not perform a task like most 
+task expressions, but rather binds variables in a logical expression 
+with solutions to that expression.  Recall that <b>logical expressions</b>
+ are defined above in the discussion of procedure preconditions. If the 
+logical expression has no solutions then the context task expression 
+fails. If an optional format string and arguments are supplied, then a 
+formatted message is printed out as well.
+<br>
+  Example:
+  <blockquote class="code"><pre>[context: (HasParent $x $y) "Person %s has no parent" $x]
+  </pre></blockquote>
+  The <tt>context</tt> expression is extremely useful when combining task expressions into complex task expressions, as explained below.  <tt>context</tt> expressions allow you to retrieve facts from the knowledge base for use in complex task expressions.<p>
+</p></dd>
+
+<dt><a name="set"></a><tt>[set: var term]</tt></dt>
+<dd>
+  like <tt>context</tt> expressions, a <tt>set</tt> expression does not perform a task, but rather binds a variable to a value specified in <tt>TERM</tt>.<br>
+  Example:
+  <blockquote class="code"><pre>[set: $x (+ 3 4)]
+  </pre></blockquote>
+  Note that the above expression is equivalent to:
+  <blockquote class="code"><pre>[context: (= $x (+ 3 4))]
+  </pre></blockquote>
+  when <tt>$x</tt> is not previously bound.  <tt>set</tt> expressions are therefore only included for convenience, to make it clear in your code when a variable is explicitly being set.<p>
+</p></dd>
+
+<dt><a name="seq"></a><tt>[seq: task*]</tt></dt>
+<dd>
+  perform the task expression(s) in sequence<br>
+  Example:
+  <blockquote class="code"><pre>[seq: [context: (and (MyFavoriteColor $color1) (YourFavoriteColor $color2))]
+   [do: (applyPaint wall $color1)]
+   [do: (applyPaint door $color2)]]
+  </pre></blockquote>
+  Note the use of <tt>context</tt> to bind <tt>$color1</tt> and <tt>$color2</tt> before executing the rest of the task expression.<p>
+</p></dd>
+
+<dt><a name="parallel"></a><tt>[parallel: task*]</tt></dt>
+<dd>
+  perform the task expression(s) in parallel<br>
+  Example:
+  <blockquote class="code"><pre>[parallel: [do: (rubStomach Bob)]
+   [do: (patHead Bob)]]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="select"></a><tt>[select: log-task*]</tt></dt>
+<dd>
+  given a series of pairs of logical expressions and task expressions, 
+perform the first one whose logical expression has a solution.  If none 
+of them have a solution, then fail.<br>
+  Example:
+  <blockquote class="code"><pre>[select: (InCar Bob) [do: (drive Bob home)]
+   (True) [do: (talkOnCellPhone Bob)]]
+</pre></blockquote>
+</dd>
+  
+<dt><a name="wait"></a><tt>[wait: log-task*]</tt></dt>
+<dd>
+  like <tt>select</tt> above, but if none of the logical expressions have a solution, wait until one does instead of failing.<br>
+  Example:
+  <blockquote class="code"><pre>[wait: (AtHome Bob) [do: (talkOnCellPhone Bob)]]
+  </pre></blockquote>
+</dd>
+  
+<dt><a name="while"></a><tt>[while: [variable*] log task]</tt></dt>
+<dd>
+  repeatedly test a logical expression and execute a task until the logical expression no longer has a solution.<br>
+  Example:
+  <blockquote class="code"><pre>[while: [$x] (and (MyPet $x) (Hungry $x)) [do: (feed $x)]]
+  </pre></blockquote>
+  Note that all free variables in the logical expression and the task expression that are <b>not</b> in the local variable list must be <b>bound</b> before performing the task.<p>
+</p></dd>
+  
+<dt><a name="forall"></a><tt>[forall: [variable*] log task]</tt></dt>
+<dd>
+  find <b>all</b> solutions to a given logical expression and then perform the given task for each solution.<br>
+  Example:
+  <blockquote class="code"><pre>[forall: [$person] (InCar $person) [do: (drive $person home)]]
+  </pre></blockquote>
+  Note that, like with <tt>while</tt> expressions above, all free variables in the logical expression and the task expression that are <b>not</b> in the local variable list must be <b>bound</b> before performing the task.
+</dd>
+
+<dt><a name="forallp"></a><tt>[forallp: [variable*] log task]</tt></dt>
+<dd>
+  find <b>all</b> solutions to a given logical expression and then perform the given task for each solution <em>in parallel</em>.<br>
+  Example:
+  <blockquote class="code"><pre>[forallp: [$person] (InCar $person) [do: (drive $person home)]]
+  </pre></blockquote>
+
+</dd>
+
+<dt><a name="forin"></a><tt>[forin: variable list task]</tt></dt>
+<dd>
+  for <b>each</b> element in the given list, perform the given task, with the variable bound to that element.<br>
+  Example:
+  <blockquote class="code"><pre>[forin: $x [A B C] [do: (print "Got %s!" [$x])]]
+  </pre></blockquote>
+  The above will result in the printing of "Got A!" "Got B!" and "Got C!" in sequence.
+</dd>
+
+
+</dl>
+
+<h4>Special effects</h4>
+<p>
+Special <b>effects</b> task expressions have a direct effect on the 
+belief knowledge base, directly adding or removing statements of belief.
+  There are three effects task expressions, and when combined with other
+ task expressions (for instance, in a <tt>seq</tt> expression) they generally come last.
+</p>
+<p>
+Note that for all of these effects task expressions, all of the 
+variables in the predicates that are not in the local variable list must
+ be bound before executing the task expression.
+</p>
+
+<dl>
+<dt><a name="conclude"></a><tt>[conclude: (predicate_identifier term*)]</tt></dt>
+<dd>
+  add a fact to the knowledge base<br>
+  Example:
+  <blockquote class="code"><pre>[conclude: (Happy Bill)]
+  </pre></blockquote>
+</dd>
+  
+<dt><a name="retract"></a><tt>[retract: (predicate_identifier term*)]</tt></dt>
+<dd>
+  remove a fact from the knowledge base<br>
+  Example:
+  <blockquote class="code"><pre>[retract: (Scared Bill)]
+  </pre></blockquote>
+</dd>
+
+<dt><a name="retractall"></a><tt>[retractall: [variable*] (predicate_identifier term*)]</tt></dt>
+<dd>
+  remove all facts from the knowledge base that match a given predicate pattern<br>
+  Example:
+  <blockquote class="code"><pre>[retractall: [$person] (Scared $person)]
+  </pre></blockquote>
+</dd>
+</dl>
+
+<p>SPARK-L also contains special functions that provide conditionality 
+for use in task expressions.  While some conditionality can be achieved 
+with the task expressions described above (for instance, with <tt>select</tt> or <tt>forall</tt>
+ task expressions) these functions provide greater flexibility for 
+testing conditions, looping over solutions, and building lists of 
+results.
+</p>
+
+<dl>
+<!--
+  <dt><a name="solutions"></a><tt>(solutions [var*] log)</tt></dt>
+  <dd>
+    returns a list of the sets of values for <tt>var*</tt> that satisfy <tt>log</tt> <br />
+    For example, given the set of three facts listed below, we can set <tt>$sols</tt> to a list of solutions:
+    <blockquote class="code"><pre>
+(p 1 2)
+(p 3 4)
+(p 3 5)
+
+[set: $sols (solutions [$x $y] (p $x $y))]
+    </pre></blockquote>
+After the evaluation of this task expression, the variable <tt>$sols</tt> will be bound to <tt>[[1 2] [3 4] [3 5]]</tt>.
+  </dd>
+-->
+  <dt><a name="solutionspat"></a><tt>(solutionspat [var*] log term)</tt></dt>
+  <dd>
+    return a list consisting of the evaluation of <tt>term</tt> for each <tt>var*</tt> that satisfies <tt>log</tt>.  <tt>solutionspat</tt> is similar to <tt>solutions</tt> above, with the difference that you can specify an arbitrary term to be included in the list for each solution. <br>
+    Examples:
+    <blockquote class="code"><pre>(p 1 2)
+(p 3 4)
+(p 3 5)
+
+[set: $sols1 (solutionspat [$x $y] (p $x $y) [$x $y])]
+[set: $sols2 (solutionspat [$x $y] (p $x $y) $y)]
+[set: $sols3 (solutionspat [$x $y] (p $x $y) "Found one!")]
+    </pre></blockquote>
+After the evaulation of each of these task expressions, the variables <tt>$sols1</tt>, <tt>$sols2</tt>, and <tt>$sols3</tt> would have the following bindings:
+<pre><tt>
+$sols1:  [[1 2] [3 4] [3 5]]
+$sols2:  [2 4 5]
+$sols3:  ["Found one!" "Found one!" "Found one!"]
+</tt></pre>    
+</dd>
+
+<dt><a name="if"></a><tt>(if log term term)</tt></dt>
+  <dd>
+    if <tt>log</tt> has a solution, returns the first <tt>term</tt>, else returns the second <tt>term</tt>.<br>
+    For example, given the same 3 facts as above:
+    <blockquote class="code"><pre>(p 1 2)
+(p 3 4)
+(p 3 5)
+
+[set: $sols (if (p 1 2) "yes" "no")]
+    </pre></blockquote>
+After the evaluation of this task expression, the variable <tt>$sols</tt> will be bound to <tt>"yes"</tt>.  While this same behavior can be achieved using the <tt>select</tt>
+ task expression described above, having conditionality available as a 
+function greatly increases the expressability and power of task and 
+predicate closures, discussed below.
+  </dd>
+
+
+</dl>
+
+</div>
+
+<h2><a name="util"></a>
+7.  SPARK Utility Packages</h2>
+<div class="entry">
+<p>
+To aid in creating packages, SPARK comes equipped with several packages 
+containing utility predicates, actions, and functions that are broadly 
+useful across many packages.  Full SPARKDOC documentation for these 
+packages can be found in your release in <a href="http://www.ai.sri.com/~spark/doc/sparkdoc/index.html">/doc/sparkdoc/</a>.  We mention several of the most generally useful ones here, but refer to the full documentation for additions.
+</p>
+<p>
+First, a few generally useful built-in utilities that you will automatically have access to without needing any imports:
+</p>
+<ul>
+  <li>basic mathematical functions:  <tt>+</tt>, <tt>-</tt>, <tt>*</tt>, <tt>/</tt>, <tt>mod</tt>, and <tt>sort</tt></li>
+  <li>basic comparative predicates:  <tt>=</tt>, <tt>!=</tt>, <tt>&gt;</tt>, <tt>&lt;</tt>, <tt>&lt;=</tt>, and <tt>&gt;=</tt></li>
+  <li><tt>print</tt> -- formatted print task.  Example:
+  <blockquote class="code"><pre>[do: (print "My name is %s and my favorite color is %s." [$name $color])]
+  </pre></blockquote></li>
+  <li><tt>genid</tt> -- task to generate a unique id</li>
+</ul>
+
+<p>
+The following utilities are not automatically loaded.  You will need to import these packages into your file when using them.
+</p>
+
+<h3><a name="sparklanglist"></a><tt>spark.lang.list</tt></h3>
+This package contains utilities for dealing with lists in SPARK.  See 
+SPARKDOC for usage.  The most commonly used list utilities:
+<ul>
+  <li>list predicates:  <tt>Empty</tt>, <tt>Member</tt>, <tt>Concat</tt>, <tt>Index</tt>, <tt>Length</tt></li>
+  <li>list function:  <tt>mapCall</tt> (like <tt>mapcar</tt> in Lisp)</li>
+
+</ul>  
+
+<h3><a name="sparkutilutil"></a><tt>spark.util.util</tt></h3>
+<p>
+[This <tt>spark.util.util</tt> package is still under construction.  Please see SPARKDOC for details.]
+</p>
+
+<p>
+With the above knowledge of SPARK, you are well on your way to writing 
+your own packages.  The rest of this guide contains more advanced 
+topics.  You are encouraged to stop here and get your "feet wet" with 
+SPARK-L before continuing with the rest of this guide.
+</p>
+</div>
+
+<!--
+<h2><a name="closures"></a>
+8.  Closures</h2>
+<div class="entry">
+<p>
+[Under construction]
+</p>
+</div>
+
+<h2><a name="adv_procedures"></a>
+9.  Advanced Procedure Definitions</h2>
+<div class="entry">
+<p>
+[Under construction]
+</p>
+</div>
+
+<h2><a name="meta"></a>
+10.  The SPARK Meta-Level</h2>
+<div class="entry">
+<p>
+[Under construction]
+</p>
+</div>
+-->
+
+<h2><a name="python"></a>
+11.  Providing Python Implementations</h2>
+<div class="entry">
+<p>
+It is possible to declare SPARK predicates, functions, and actions
+whose behavior is determined by Python or Java code. This is achieved
+by specifying an <tt>imp:</tt> attribute on
+a <tt>defpredicate</tt>, <tt>deffunction</tt>, or <tt>defaction</tt>
+respectively. For example, to define <tt>&gt;</tt> as a predicate
+taking two parameters whose truth is determined by the Python
+function <tt>__gt__</tt> in the Python module <tt>operator</tt> you
+would write:
+</p><blockquote class="code"><pre>{defpredicate (&gt; $x $y) imp: (pyPredicate "++" (pyMod "operator" "__gt__"))} 
+</pre></blockquote>
+<p></p>
+More detains can be found in Section 7 of <a href="http://www.ai.sri.com/~spark/doc/SPARK-ref-man.pdf">The SPARK Reference Manual</a>
+</div>
+
+<!--
+<h2><a name="script"></a>
+12.  SPARK Scripting</h2>
+<div class="entry">
+<p>
+[Under construction]
+</p>
+</div>
+-->
+
+<h2><a name="index"></a>
+A.  Index</h2>
+<div class="index">
+<p>
+
+</p><h3>ABC</h3>
+<a href="#achieve"><tt>achieve:</tt></a><br>
+<a href="#achievecue"><tt>achieve: </tt>(cue event)</a><br>
+<a href="#actions">actions</a><br>
+<a href="#beliefkb">belief knowledge base</a><br>
+<a href="#body"><tt>body:</tt></a><br>
+<a href="#closures">closures</a><br>
+<a href="#comments">comments</a><br>
+<a href="#conclude"><tt>conclude:</tt></a><br>
+<a href="#constants">constants</a><br>
+<a href="#context"><tt>context:</tt></a><br>
+<a href="#cue"><tt>cue:</tt></a><br>
+
+<h3>DEF</h3>
+<a href="#declarations">declarations</a><br>
+<a href="#actions"><tt>defaction</tt></a><br>
+<a href="#constants"><tt>defconstant</tt></a><br>
+<a href="#functions"><tt>deffunction</tt></a><br>
+<a href="#definitions">definitions</a><br>
+<a href="#predicates"><tt>defpredicate</tt></a><br>
+<a href="#procedures"><tt>defprocedure</tt></a><br>
+<a href="#do"><tt>do:</tt></a><br>
+<a href="#docue"><tt>do:</tt> (cue event)</a><br>
+<a href="#export">export statements</a><br>
+<a href="#export"><tt>export:</tt></a><br>
+<a href="#export"><tt>exportall:</tt></a><br>
+<a href="#facts">facts</a><br>
+<a href="#fail"><tt>fail:</tt></a><br>
+<a href="#forall"><tt>forall:</tt></a><br>
+<a href="#forallp"><tt>forallp:</tt></a><br>
+<a href="#forin"><tt>forin:</tt></a><br>
+<a href="#functions">functions</a><br>
+
+<h3>GHI</h3>
+<a href="#ground"><tt>ground</tt> predicate</a><br>
+<a href="#if"><tt>if</tt></a><br>
+<a href="#import">import statements</a><br>
+<a href="#import"><tt>importall:</tt></a><br>
+<a href="#import"><tt>importfrom:</tt></a><br>
+
+<h3>KLM</h3>
+<a href="#beliefkb">knowledge base</a><br>
+<a href="#meta">meta events</a><br>
+<a href="#meta">meta level</a><br>
+
+<h3>NOP</h3>
+<a href="#newfactcue"><tt>newfact:</tt> (cue event)</a><br>
+<a href="#packages">packages</a><br>
+<a href="#parallel"><tt>parallel:</tt></a><br>
+<a href="#precondition"><tt>precondition:</tt></a><br>
+<a href="#predicates">predicates</a><br>
+<a href="#procedures">procedures</a><br>
+<a href="#adv_procedures">procedures (advanced definitions)</a><br>
+<a href="#body">procedures (body)</a><br>
+<a href="#cue">procedures (cues)</a><br>
+<a href="#name">procedures (names)</a><br>
+<a href="#python">python implementations</a><br>
+
+<h3>QRS</h3>
+<a href="#requires">requires statements</a><br>
+<a href="#requires"><tt>requires:</tt></a><br>
+<a href="#retract"><tt>retract:</tt></a><br>
+<a href="#retractall"><tt>retractall:</tt></a><br>
+<a href="#script">scripting</a><br>
+<a href="#select"><tt>select:</tt></a><br>
+<a href="#seq"><tt>seq:</tt></a><br>
+<a href="#set"><tt>set:</tt></a><br>
+<!--
+<a href="#solutions"><tt>solutions</tt></a><br />
+-->
+<a href="#solutionspat"><tt>solutionspat</tt></a><br>
+<a href="#sparklanglist">spark.lang.list</a><br>
+<a href="#sparkutilutil">spark.util.util</a><br>
+<a href="#succeed"><tt>succeed:</tt></a><br>
+<a href="#beliefkb">symbols</a><br>
+
+<h3>WXYZ</h3>
+<a href="#wait"><tt>wait:</tt></a><br>
+<a href="#while"><tt>while:</tt></a><br>
+
+
+<p></p>
+</div>
+
+<hr width="80%" size="4" noshade="noshade">
+<p>
+<i>last edited 15 September 2005.<br>
+Copyright (c) 2004, SRI International.  All rights reserved.</i>
+</p>
+
+
+<iframe src="" id="promnesia-sidebar" class="promnesia"></iframe></body></html>

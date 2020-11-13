@@ -1,0 +1,31 @@
+{defaction (start)}
+{defaction (inspect_data $data)}
+{defpredicate (Test $test)}
+{defpredicate (Data_To_Inspect $data)}
+{defpredicate (Preconditions_Satisfied $test $data)}
+
+{defprocedure Start
+  cue: [do: (start)]
+  precondition: (Data_To_Inspect $data)
+  body: [seq:
+          # [do: (print "Figuring out which tests to run on data: %s" [$data])]
+	  [do: (inspect_data $data)]
+	  ] 
+  }
+
+{defprocedure Inspect_Data
+  cue: [do: (inspect_data +$data)]
+  precondition: (True)
+  body: [seq:
+	  [do: (print "Figuring out which tests to run on data: %s" [$data])]
+	  [forall: [$test] (Test $test)
+		  [succeed: conclude: (Preconditions_Satisfied $test $data)]]
+	  ] 
+  }
+
+
+(Data_To_Inspect "Andrew Dougherty")
+
+(Test "FirstnameP")
+(Test "LastnameP")
+(Test "NamedEntityP")

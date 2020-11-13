@@ -1,0 +1,79 @@
+ 
+●     Home     ●    Documentation ●      Download   ●    Related Links ●      Contact    ●
+                                          [logo]
+●    Spark 0.9.0 is now available !!                                         ●
+ 
+
+Technical Documentation Overview
+
+This documentation is separated into three sections. The Getting Started
+documentation provides instructions for installing, configuring, and running
+SPARK. The For Developers section provides advanced documentation for writing
+your own SPARK-L. The Papers section links to research papers on SPARK.
+
+Terminology
+
+SPARK refers to the 'SRI Procedural Agent Realization Kit' agent framework. For
+more about this framework, please refer to the SPARK Detailed Technical Manual.
+
+SPARK-L is the language that the SPARK interpreter processes. SPARK-L files are
+usually denoted by a .spark extension.
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SPARK is distributed under a BSD-style open source license.
+
+Getting Started
+
+  • Requirements
+  • Installation
+  • Running SPARK
+  • SPARK command line tutorial
+
+For Developers
+
+  • SPARK in a Nutshell Developer's Guide (start here). Quick reference for the
+    SPARK-L language.
+  • SPARK Detailed Technical Manual
+  • SPARK module API documentation (SPARKDOC). This documentation is
+    automatically generated from SPARK-L code and contains a listing of modules
+    and their associated actions, predicates, and functions.
+  • Notes on the Changes from Previous Versions of SPARK
+
+SPARK Plugin for Eclipse:
+
+  • Plugin User Guide
+  • Plugin Installation Guide
+
+SPARK modules/extensions:
+
+  • iCalendar utilties for SPARK-L
+
+Useful stuff:
+
+  • SPARK-mode for Emacs
+  • Python-mode for Emacs
+
+Historical, do not use:
+
+  • Useful Python routines for writing modules in SPARK (out of date)
+  • Using SPARK with OAA (out of date)
+
+Papers
+
+  • Morley, D. and Myers, K. The SPARK Agent Framework. In Proc. of the Third
+    Int. Joint Conf. on Autonomous Agents and Multi Agent Systems (AAMAS-04),
+    New York, NY, pp. 712-719, July 2004. 
+
+  • Morley, D. and Myers, K. Balancing Formal and Practical Concerns in Agent
+    Design. In Proc. of the AAAI Workshop on Intelligent Agent Architectures:
+    Combining the Strengths of Software Engineering and Cognitive Systems,
+    2004.
+
+ 
+
+● ©2005 SRI International 333 Ravenswood Avenue, Menlo  ●
+  Park, CA 94025-3493
+[horizontalbar]
+● SRI International is an independent, nonprofit        ●
+  corporation. Privacy policy
+

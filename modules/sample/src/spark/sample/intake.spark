@@ -1,0 +1,29 @@
+{defaction (intake $user)}
+{defconstant USER}
+
+{defpredicate (User $user)}
+{defpredicate (Called $user $username)}
+
+{defpredicate (Homeless $user)}
+{defpredicate (Poor $user)}
+{defpredicate (Ill $user)}
+{defpredicate (Disabled $user)}
+
+{defpredicate (Sleeps_At_Location $user $location)}
+
+# {defpredicate (FollowUp Homeless Sleeps_At_Location)}
+
+{defprocedure Begin_Intake
+  cue: [do: (intake $user)]
+  body:
+  [seq: [context: (and (Called $user $username))]
+	[do: (print
+	      " *** Begin intake of User %s ***" 
+	      [$username])]
+	
+	]
+  
+  }
+
+(User USER)
+(Called USER "Andrew Dougherty")

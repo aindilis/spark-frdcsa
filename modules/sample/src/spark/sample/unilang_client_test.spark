@@ -1,0 +1,34 @@
+
+package: sample.unilang_client_test
+
+importfrom: spark.io.unilang queryAgent
+importfrom: spark.lang.string chop
+
+{defaction (start $string)}
+{defaction (inspect_data $data)}
+{defpredicate (Test $test)}
+{defpredicate (Data_To_Inspect $data)}
+{defpredicate (Preconditions_Satisfied $test $data)}
+
+{defprocedure Start
+  cue: [do: (start +$string)]
+  precondition: (Data_To_Inspect $data)
+  body: [seq:
+	  [do: (inspect_data $string)]
+	  ] 
+  }
+
+{defprocedure Inspect_Data
+  cue: [do: (inspect_data +$string)]
+  precondition: (True)
+  body: [seq:
+	  [do: (print "Result is: %s" [(queryAgent "Echo" $string)])]
+	  ] 
+  }
+
+
+(Data_To_Inspect "Andrew Dougherty")
+
+(Test "FirstnameP")
+(Test "LastnameP")
+(Test "NamedEntityP")
